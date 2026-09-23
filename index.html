@@ -3,105 +3,181 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Касса</title>
+  <title>Система Учета</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    :root { --bg: #121214; --card: #1c1c1f; --accent: #ff6b00; --text: #ffffff; --subtext: #8e8e93; }
-    body { margin: 0; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); user-select: none; padding-bottom: 90px; }
-    h2 { margin: 0 0 16px 0; font-size: 20px; font-weight: 700; }
+    :root { --bg: #121214; --card: #1c1c1f; --accent: #ff6b00; --text: #ffffff; --subtext: #8e8e93; --green: #32d74b; --red: #ff453a; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); user-select: none; padding-bottom: 80px; }
+    .header { padding: 16px; font-size: 20px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    
+    /* Вкладки */
+    .view { display: none; padding: 16px; }
+    .view.active { display: block; }
+    
+    /* Стили Кассы */
     .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    .item-card { background: var(--card); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid rgba(255, 255, 255, 0.05); cursor: pointer; transition: transform 0.1s, border-color 0.2s; }
-    .item-card:active { transform: scale(0.97); }
+    .item-card { background: var(--card); border-radius: 14px; padding: 14px; border: 1px solid rgba(255, 255, 255, 0.05); transition: 0.2s; }
     .item-card.active { border-color: var(--accent); }
     .item-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
     .item-price { color: var(--accent); font-size: 14px; font-weight: 700; }
-    .counter { margin-top: 10px; display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.07); border-radius: 8px; padding: 4px 8px; }
-    .btn-count { background: none; border: none; color: var(--text); font-size: 18px; font-weight: 700; padding: 2px 8px; cursor: pointer; }
-    .count-val { font-size: 14px; font-weight: 600; }
+    .counter { margin-top: 10px; display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.07); border-radius: 8px; padding: 4px 8px; }
+    .btn-count { background: none; border: none; color: var(--text); font-size: 18px; font-weight: 700; cursor: pointer; padding: 0 10px; }
     .pay-methods { display: flex; gap: 10px; margin-top: 20px; }
-    .pay-btn { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1); background: var(--card); color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; }
+    .pay-btn { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: var(--card); color: var(--text); text-align: center; font-weight: 600; }
     .pay-btn.selected { background: var(--accent); border-color: var(--accent); }
-    .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1c1c1f; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255, 255, 255, 0.1); }
-    .total-info { display: flex; flex-direction: column; }
-    .total-label { font-size: 12px; color: var(--subtext); }
-    .total-sum { font-size: 20px; font-weight: 700; color: var(--accent); }
-    .btn-submit { background: var(--accent); color: #fff; border: none; padding: 12px 24px; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; }
-    .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
-    .loader { text-align: center; color: var(--subtext); margin-top: 40px; font-size: 14px; }
+    
+    /* Стили Админки */
+    .admin-stat-card { background: var(--card); border-radius: 12px; padding: 12px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); }
+    .stat-header { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px; font-size: 15px; }
+    .stat-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--subtext); margin-bottom: 4px; }
+    .margin-good { color: var(--green); font-weight: 600; }
+    .margin-bad { color: var(--red); font-weight: 600; }
+    
+    /* Форма добавления */
+    .form-group { margin-bottom: 12px; }
+    input, select { width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 12px; border-radius: 8px; margin-top: 6px; font-size: 14px; }
+    .ing-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .ing-row select { flex: 2; }
+    .ing-row input { flex: 1; }
+    
+    /* Кнопки */
+    .btn-primary { background: var(--accent); color: #fff; border: none; padding: 14px; border-radius: 10px; width: 100%; font-size: 16px; font-weight: 700; margin-top: 10px; }
+    .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 10px; border-radius: 8px; width: 100%; font-size: 14px; margin-top: 10px; }
+    
+    /* Навигация низ */
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1c1c1f; display: flex; border-top: 1px solid rgba(255,255,255,0.1); }
+    .nav-item { flex: 1; text-align: center; padding: 16px 0; color: var(--subtext); font-size: 14px; font-weight: 600; }
+    .nav-item.active { color: var(--accent); border-bottom: 3px solid var(--accent); }
+    
+    /* Нижняя плашка кассы */
+    .pos-bottom { position: fixed; bottom: 55px; left: 0; right: 0; background: #1c1c1f; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.1); }
+    
+    .loader { text-align: center; padding: 40px; color: var(--subtext); }
   </style>
 </head>
 <body>
 
-  <h2>☕️ Меню кассы</h2>
+  <div id="loader" class="loader">Синхронизация с базой...</div>
 
-  <!-- Сюда будут грузиться товары -->
-  <div class="grid" id="itemsGrid">
-    <div class="loader">Загрузка меню...</div>
-  </div>
-
-  <h3 style="margin-top: 24px; font-size: 16px;">Тип оплаты:</h3>
-  <div class="pay-methods">
-    <div class="pay-btn selected" id="payCash" onclick="setPayment('Наличные')">💵 Наличные</div>
-    <div class="pay-btn" id="payCard" onclick="setPayment('Карта')">💳 Карта</div>
-  </div>
-
-  <div class="bottom-bar">
-    <div class="total-info">
-      <span class="total-label">Итого к оплате:</span>
-      <span class="total-sum" id="totalSum">0 ₴</span>
+  <!-- КАССА -->
+  <div id="view-pos" class="view">
+    <div class="header">☕️ Касса</div>
+    <div class="grid" id="posGrid"></div>
+    <h3 style="margin-top: 24px; font-size: 15px;">Оплата:</h3>
+    <div class="pay-methods">
+      <div class="pay-btn selected" id="payCash" onclick="setPayment('Наличные')">💵 Наличные</div>
+      <div class="pay-btn" id="payCard" onclick="setPayment('Карта')">💳 Карта</div>
     </div>
-    <button class="btn-submit" id="submitBtn" onclick="submitOrder()" disabled>Оплатить</button>
+    <div class="pos-bottom" id="posBottom" style="display:none;">
+      <div>
+        <div style="font-size: 12px; color: var(--subtext);">К оплате:</div>
+        <div style="font-size: 20px; font-weight: 700; color: var(--accent);" id="totalSum">0 ₴</div>
+      </div>
+      <button class="btn-primary" style="width: auto; margin:0; padding: 10px 24px;" onclick="submitOrder()" id="btnSubmitOrder">Оплатить</button>
+    </div>
+  </div>
+
+  <!-- АДМИНКА -->
+  <div id="view-admin" class="view">
+    <div class="header">⚙️ Дашборд и Меню</div>
+    
+    <div id="admin-list">
+      <!-- Сюда рендерятся карточки с себестоимостью -->
+    </div>
+
+    <button class="btn-primary" onclick="showNewItemForm()">+ Создать позицию</button>
+  </div>
+
+  <!-- ФОРМА СОЗДАНИЯ -->
+  <div id="view-form" class="view">
+    <div class="header">Новая позиция</div>
+    <div class="form-group">
+      <label>Название напитка</label>
+      <input type="text" id="newName" placeholder="Например: Флэт Уайт">
+    </div>
+    <div class="form-group">
+      <label>Цена продажи (₴)</label>
+      <input type="number" id="newPrice" placeholder="Например: 70">
+    </div>
+    
+    <div style="margin-top: 20px; font-weight: 600;">Состав (Техкарта):</div>
+    <div id="ingredientsList"></div>
+    <button class="btn-secondary" onclick="addIngredientRow()">+ Ингредиент</button>
+    
+    <button class="btn-primary" style="margin-top: 30px;" onclick="saveNewItem()">Сохранить в базу</button>
+    <button class="btn-secondary" style="background: transparent; color: var(--subtext);" onclick="switchTab('admin')">Отмена</button>
+  </div>
+
+  <!-- НАВИГАЦИЯ -->
+  <div class="bottom-nav" id="bottomNav" style="display:none;">
+    <div class="nav-item active" id="nav-pos" onclick="switchTab('pos')">☕️ Касса</div>
+    <div class="nav-item" id="nav-admin" onclick="switchTab('admin')">⚙️ Админка</div>
   </div>
 
   <script>
     const tg = window.Telegram.WebApp;
-    tg.expand(); 
-
-    // ВСТАВЬ СЮДА СВОЮ ССЫЛКУ НА APPS SCRIPT (та, что заканчивается на /exec)
+    tg.expand();
+    
+    // ВСТАВЬ СЮДА СВОЙ ХЕШ ИЗ GOOGLE APPS SCRIPT
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxoxOl1uem2NUGdPiQ6eCNXCkTSFaAFZc5xHqhWG398EmZPBr06V1o_sZUWx-aOzYchYw/exec';
+    
+    // Берем ID юзера из телеги (или заглушка для тестов в браузере)
+    const userId = tg.initDataUnsafe?.user?.id || '829150674'; 
 
-    let MENU = [];
+    let STATE = { role: 'Guest', menu: [], stock: [], recipes: [] };
     let cart = {};
     let paymentMethod = "Наличные";
 
-    // Подтягиваем меню из Гугл Таблицы
-    async function fetchMenu() {
+    // ЗАГРУЗКА ДАННЫХ
+    async function initApp() {
       try {
-        const response = await fetch(GOOGLE_SCRIPT_URL);
-        MENU = await response.json();
-        renderMenu();
-      } catch (error) {
-        document.getElementById('itemsGrid').innerHTML = '<div class="loader">Ошибка загрузки. Проверьте ссылку.</div>';
+        const response = await fetch(`${GOOGLE_SCRIPT_URL}?userId=${userId}`);
+        STATE = await response.json();
+        
+        document.getElementById('loader').style.display = 'none';
+        
+        // Показываем навигацию только админам
+        if (STATE.role.toLowerCase().includes('админ')) {
+          document.getElementById('bottomNav').style.display = 'flex';
+        } else {
+          document.getElementById('posBottom').style.bottom = '0'; // Опускаем плашку кассы
+        }
+
+        renderPOS();
+        renderAdmin();
+        switchTab('pos');
+      } catch (err) {
+        document.getElementById('loader').innerText = 'Ошибка загрузки базы.';
       }
     }
 
-    function renderMenu() {
-      const grid = document.getElementById('itemsGrid');
+    // --- ЛОГИКА КАССЫ ---
+    function renderPOS() {
+      const grid = document.getElementById('posGrid');
       grid.innerHTML = '';
-      MENU.forEach(item => {
+      STATE.menu.forEach(item => {
         const count = cart[item.name] || 0;
         grid.innerHTML += `
-          <div class="item-card ${count > 0 ? 'active' : ''}">
-            <div>
-              <div class="item-title">${item.name}</div>
-              <div class="item-price">${item.price} ₴</div>
-            </div>
-            <div class="counter">
-              <button class="btn-count" onclick="changeCount('${item.name}', -1)">-</button>
-              <span class="count-val">${count}</span>
-              <button class="btn-count" onclick="changeCount('${item.name}', 1)">+</button>
-            </div>
+          <div class="item-card ${count > 0 ? 'active' : ''}" onclick="changeCount('${item.name}', 1)">
+            <div class="item-title">${item.name}</div>
+            <div class="item-price">${item.price} ₴</div>
+            ${count > 0 ? `
+              <div class="counter" onclick="event.stopPropagation()">
+                <button class="btn-count" onclick="changeCount('${item.name}', -1)">-</button>
+                <span style="font-weight:600; font-size:14px;">${count}</span>
+                <button class="btn-count" onclick="changeCount('${item.name}', 1)">+</button>
+              </div>
+            ` : ''}
           </div>
         `;
       });
-      updateTotal();
+      updateCartTotal();
     }
 
     function changeCount(name, delta) {
-      if (!cart[name]) cart[name] = 0;
-      cart[name] += delta;
+      cart[name] = (cart[name] || 0) + delta;
       if (cart[name] <= 0) delete cart[name];
-      renderMenu();
+      renderPOS();
     }
 
     function setPayment(method) {
@@ -110,32 +186,129 @@
       document.getElementById('payCard').classList.toggle('selected', method === 'Карта');
     }
 
-    function updateTotal() {
+    function updateCartTotal() {
       let total = 0;
-      let count = 0;
       for (let name in cart) {
-        const item = MENU.find(m => m.name === name);
+        const item = STATE.menu.find(m => m.name === name);
         total += item.price * cart[name];
-        count += cart[name];
       }
       document.getElementById('totalSum').innerText = `${total} ₴`;
-      document.getElementById('submitBtn').disabled = count === 0;
+      document.getElementById('posBottom').style.display = total > 0 ? 'flex' : 'none';
     }
 
     function submitOrder() {
       const order = [];
       let total = 0;
       for (let name in cart) {
-        const item = MENU.find(m => m.name === name);
+        const item = STATE.menu.find(m => m.name === name);
         order.push({ name: name, count: cart[name], price: item.price });
         total += item.price * cart[name];
       }
-      const payload = { type: "order", items: order, payment: paymentMethod, total: total };
-      tg.sendData(JSON.stringify(payload));
+      tg.sendData(JSON.stringify({ type: "order", items: order, payment: paymentMethod, total: total }));
     }
 
-    // Запускаем загрузку при открытии
-    fetchMenu();
+    // --- ЛОГИКА АДМИНКИ ---
+    function renderAdmin() {
+      const list = document.getElementById('admin-list');
+      list.innerHTML = '';
+      
+      STATE.menu.forEach(item => {
+        // Считаем себестоимость
+        let cost = 0;
+        const itemRecipes = STATE.recipes.filter(r => r.product === item.name);
+        itemRecipes.forEach(r => {
+          const stockItem = STATE.stock.find(s => s.name === r.ingredient);
+          if (stockItem) cost += stockItem.cost * r.qty;
+        });
+        
+        // Считаем маржу
+        const margin = item.price > 0 ? ((item.price - cost) / item.price * 100).toFixed(0) : 0;
+        const marginClass = margin >= 50 ? 'margin-good' : 'margin-bad';
+
+        list.innerHTML += `
+          <div class="admin-stat-card">
+            <div class="stat-header"><span>${item.name}</span> <span>${item.price} ₴</span></div>
+            <div class="stat-row"><span>Себестоимость:</span> <span>${cost.toFixed(2)} ₴</span></div>
+            <div class="stat-row"><span>Наценка (Маржа):</span> <span class="${marginClass}">${margin}%</span></div>
+          </div>
+        `;
+      });
+    }
+
+    // --- ЛОГИКА ФОРМЫ НОВОГО ТОВАРА ---
+    function showNewItemForm() {
+      document.getElementById('newName').value = '';
+      document.getElementById('newPrice').value = '';
+      document.getElementById('ingredientsList').innerHTML = '';
+      addIngredientRow(); // Добавляем первую пустую строку состава
+      switchTab('form');
+    }
+
+    function addIngredientRow() {
+      const container = document.getElementById('ingredientsList');
+      const row = document.createElement('div');
+      row.className = 'ing-row';
+      
+      let options = STATE.stock.map(s => `<option value="${s.name}">${s.name} (${s.unit})</option>`).join('');
+      row.innerHTML = `
+        <select class="ing-select">${options}</select>
+        <input type="number" class="ing-qty" placeholder="Кол-во">
+      `;
+      container.appendChild(row);
+    }
+
+    function saveNewItem() {
+      const name = document.getElementById('newName').value.trim();
+      const price = Number(document.getElementById('newPrice').value);
+      
+      if (!name || !price) return tg.showAlert("Заполните название и цену!");
+
+      const ingRows = document.querySelectorAll('.ing-row');
+      const ingredients = [];
+      let hasError = false;
+
+      ingRows.forEach(row => {
+        const ingName = row.querySelector('.ing-select').value;
+        const qty = Number(row.querySelector('.ing-qty').value);
+        if (qty > 0) {
+          ingredients.push({ name: ingName, qty: qty });
+        } else {
+          hasError = true;
+        }
+      });
+
+      if (ingredients.length === 0 || hasError) return tg.showAlert("Укажите правильное количество ингредиентов!");
+
+      // Отправляем в бота
+      tg.sendData(JSON.stringify({
+        type: "new_item",
+        name: name,
+        price: price,
+        ingredients: ingredients
+      }));
+    }
+
+    // Утилита переключения вкладок
+    function switchTab(tabId) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      
+      if (tabId === 'pos') {
+        document.getElementById('view-pos').classList.add('active');
+        document.getElementById('nav-pos')?.classList.add('active');
+        document.getElementById('posBottom').style.display = Object.keys(cart).length > 0 ? 'flex' : 'none';
+      } else if (tabId === 'admin') {
+        document.getElementById('view-admin').classList.add('active');
+        document.getElementById('nav-admin')?.classList.add('active');
+        document.getElementById('posBottom').style.display = 'none';
+      } else if (tabId === 'form') {
+        document.getElementById('view-form').classList.add('active');
+        document.getElementById('posBottom').style.display = 'none';
+      }
+    }
+
+    // Запуск
+    initApp();
   </script>
 </body>
 </html>
