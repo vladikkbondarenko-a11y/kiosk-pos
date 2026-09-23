@@ -2,18 +2,16 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <!-- Форсируем правильный фуллскрин на мобилках -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Система Учета</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    :root { --bg: #121214; --card: #1c1c1f; --accent: #ff6b00; --text: #ffffff; --subtext: #8e8e93; --green: #32d74b; --red: #ff453a; }
+    :root { --bg: #121214; --card: #1c1c1f; --accent: #ff6b00; --text: #ffffff; --subtext: #8e8e93; --green: #32d74b; --red: #ff453a; --warn: #ffcc00; }
     body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); user-select: none; padding-bottom: 80px; }
     .header { padding: 16px; font-size: 20px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .view { display: none; padding: 16px; }
     .view.active { display: block; }
     
-    /* Касса */
     .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
     .item-card { background: var(--card); border-radius: 14px; padding: 14px; border: 1px solid rgba(255, 255, 255, 0.05); transition: 0.2s; }
     .item-card.active { border-color: var(--accent); }
@@ -25,14 +23,12 @@
     .pay-btn { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: var(--card); color: var(--text); text-align: center; font-weight: 600; cursor: pointer; }
     .pay-btn.selected { background: var(--accent); border-color: var(--accent); }
     
-    /* Карточки */
     .admin-stat-card { background: var(--card); border-radius: 12px; padding: 12px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
     .stat-header { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px; font-size: 15px; }
     .stat-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--subtext); margin-bottom: 4px; }
     .margin-good { color: var(--green); font-weight: 600; }
     .margin-bad { color: var(--red); font-weight: 600; }
     
-    /* Формы */
     .form-group { margin-bottom: 12px; }
     input, select { width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 12px; border-radius: 8px; margin-top: 6px; font-size: 14px; }
     .ing-row { display: flex; gap: 8px; margin-bottom: 8px; }
@@ -40,28 +36,27 @@
     .ing-row input { flex: 1; }
     .btn-del { width: 45px; background: rgba(255,69,58,0.1); color: #ff453a; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 6px; }
     
-    .btn-primary { background: var(--accent); color: #fff; border: none; padding: 14px; border-radius: 10px; width: 100%; font-size: 16px; font-weight: 700; margin-top: 10px; }
-    .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 10px; border-radius: 8px; width: 100%; font-size: 14px; margin-top: 10px; }
+    .btn-primary { background: var(--accent); color: #fff; border: none; padding: 14px; border-radius: 10px; width: 100%; font-size: 16px; font-weight: 700; margin-top: 10px; cursor: pointer; }
+    .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 10px; border-radius: 8px; width: 100%; font-size: 14px; margin-top: 10px; cursor: pointer; }
     
-    /* Навигация */
     .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1c1c1f; display: flex; border-top: 1px solid rgba(255,255,255,0.1); padding-bottom: env(safe-area-inset-bottom); }
     .nav-item { flex: 1; text-align: center; padding: 16px 0; color: var(--subtext); font-size: 14px; font-weight: 600; cursor: pointer; }
     .nav-item.active { color: var(--accent); border-bottom: 3px solid var(--accent); }
     .pos-bottom { position: fixed; bottom: calc(55px + env(safe-area-inset-bottom)); left: 0; right: 0; background: #1c1c1f; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.1); }
     
     .loader { text-align: center; padding: 40px; color: var(--subtext); }
-    
-    /* Лог склада */
     .log-item { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; border-left: 3px solid; }
     .log-add { border-left-color: var(--green); }
     .log-rem { border-left-color: var(--red); }
+
+    .warning-box { background: rgba(255, 204, 0, 0.1); border-left: 3px solid var(--warn); padding: 10px; border-radius: 6px; font-size: 13px; color: #fff; margin-bottom: 15px; }
   </style>
 </head>
 <body>
 
   <div id="loader" class="loader">Синхронизация с базой...</div>
 
-  <!-- ВЬЮХА 1: КАССА -->
+  <!-- КАССА -->
   <div id="view-pos" class="view">
     <div class="header">☕️ Касса</div>
     <div class="grid" id="posGrid"></div>
@@ -79,7 +74,7 @@
     </div>
   </div>
 
-  <!-- ВЬЮХА 2: ДАШБОРД (АДМИНКА) -->
+  <!-- ДАШБОРД (АДМИНКА) -->
   <div id="view-admin" class="view">
     <div class="header">⚙️ Дашборд и Меню</div>
     <div style="font-size: 12px; color: var(--subtext); margin-bottom:15px;">Нажми на позицию для настройки</div>
@@ -87,7 +82,7 @@
     <button class="btn-primary" onclick="showForm()">+ Создать позицию</button>
   </div>
 
-  <!-- ВЬЮХА 3: СКЛАД -->
+  <!-- СКЛАД -->
   <div id="view-stock" class="view">
     <div class="header">📦 Склад и Инвентаризация</div>
     
@@ -96,13 +91,45 @@
       <div class="pay-btn" id="stockRemBtn" onclick="setStockMode('remove')">🗑 Списание</div>
     </div>
 
-    <div class="form-group">
-      <label>Ингредиент</label>
+    <!-- Чекбокс для нового товара (виден только при Приходе) -->
+    <div id="newStockWrapper" style="margin-bottom: 15px;">
+      <label style="display: flex; align-items: center; gap: 8px; font-size: 14px;">
+        <input type="checkbox" id="isNewStock" onchange="toggleNewStockFields()" style="width: 20px; margin: 0;">
+        Абсолютно новый ингредиент
+      </label>
+    </div>
+
+    <!-- Стандартный выбор -->
+    <div class="form-group" id="existStockGroup">
+      <label>Ингредиент из базы</label>
       <select id="stockItem"></select>
     </div>
+
+    <!-- Поля для нового товара -->
+    <div id="newStockFields" style="display: none;">
+      <div class="form-group">
+        <label>Название нового ингредиента</label>
+        <input type="text" id="newStockName" placeholder="Например: Сироп Клубника">
+      </div>
+      <div class="form-group">
+        <label>Базовая единица измерения</label>
+        <select id="newStockUnit">
+          <option value="л">Литры (л)</option>
+          <option value="мл">Миллилитры (мл)</option>
+          <option value="кг">Килограммы (кг)</option>
+          <option value="г">Граммы (г)</option>
+          <option value="шт">Штуки (шт)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Цена за единицу (₴)</label>
+        <input type="number" id="newStockCost" placeholder="Сколько стоит 1 л / 1 кг / 1 шт">
+      </div>
+    </div>
+
     <div class="form-group">
-      <label>Количество (в базовых ед.)</label>
-      <input type="number" id="stockQty" placeholder="Например: 1000">
+      <label>Количество прихода/списания</label>
+      <input type="number" id="stockQty" placeholder="Например: 5">
     </div>
     <div class="form-group">
       <label>Причина / Комментарий</label>
@@ -114,25 +141,35 @@
     <div id="stockLogList"></div>
   </div>
 
-  <!-- ФОРМА РЕДАКТОРА (СКРЫТАЯ) -->
+  <!-- РЕДАКТОР МЕНЮ -->
   <div id="view-form" class="view">
     <div class="header" style="display: flex; justify-content: space-between; align-items: center;">
       <span id="formTitle">Редактор</span>
       <span style="color:var(--accent); font-size:14px; cursor:pointer;" onclick="switchTab('admin')">Назад</span>
     </div>
+    
     <div class="admin-stat-card" style="margin-top: 15px; background: rgba(255,255,255,0.03);">
       <div class="stat-row"><span>Себестоимость:</span> <span id="liveCost">0.00 ₴</span></div>
       <div class="stat-row"><span>Наценка (Маржа):</span> <span id="liveMargin">0%</span></div>
     </div>
+    
     <div class="form-group" style="margin-top: 15px;">
-      <label>Название</label>
+      <label>Название напитка</label>
       <input type="text" id="editName">
     </div>
     <div class="form-group">
       <label>Цена продажи (₴)</label>
       <input type="number" id="editPrice" oninput="calcLiveStats()">
     </div>
-    <div style="margin-top: 20px; font-weight: 600;">Состав (Техкарта):</div>
+    
+    <div style="margin-top: 20px; font-weight: 600; margin-bottom: 8px;">Состав (Техкарта):</div>
+    
+    <!-- ПРЕДУПРЕЖДЕНИЕ -->
+    <div class="warning-box">
+      ⚠️ <b>Важно:</b> Указывайте расход строго в базовых единицах склада.<br>
+      <i>Например: Если склад считает молоко в литрах (л), то 200 мл нужно вписать как <b>0.2</b>. Если кофе в кг, то 18 г — это <b>0.018</b>.</i>
+    </div>
+
     <div id="ingredientsList"></div>
     <button class="btn-secondary" onclick="addIngredientRow()">+ Ингредиент</button>
     <button class="btn-primary" style="margin-top: 30px;" onclick="saveItem()">💾 Сохранить</button>
@@ -147,12 +184,9 @@
 
   <script>
     const tg = window.Telegram.WebApp;
-    
-    // Форсируем полный экран (если Телеграм обновлен до свежих версий)
     tg.expand();
     try { tg.requestFullscreen(); } catch (e) {}
 
-    // ВСТАВЬ СЮДА СВОЙ ХЕШ
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxoxOl1uem2NUGdPiQ6eCNXCkTSFaAFZc5xHqhWG398EmZPBr06V1o_sZUWx-aOzYchYw/exec';
     
     const userId = tg.initDataUnsafe?.user?.id || '829150674'; 
@@ -160,7 +194,7 @@
     let cart = {};
     let paymentMethod = "Наличные";
     let editingItemName = null;
-    let stockMode = 'add'; // add | remove
+    let stockMode = 'add'; 
 
     async function initApp() {
       try {
@@ -173,44 +207,34 @@
         } else {
           document.getElementById('posBottom').style.bottom = '0';
         }
-
-        renderPOS();
-        renderAdmin();
-        renderStock();
-        switchTab('pos');
+        renderPOS(); renderAdmin(); renderStock(); switchTab('pos');
       } catch (err) {
         document.getElementById('loader').innerText = 'Ошибка загрузки базы.';
       }
     }
 
-    /* === СКЛАД (ПРИХОД/СПИСАНИЕ) === */
+    /* === СКЛАД === */
     function renderStock() {
-      // Заполняем выпадающий список
       const select = document.getElementById('stockItem');
       select.innerHTML = '<option value="" disabled selected>Выберите ингредиент...</option>';
       STATE.stock.forEach(s => {
-        select.innerHTML += `<option value="${s.name}">${s.name} (Остаток: ${s.currentQty} ${s.unit})</option>`;
+        select.innerHTML += `<option value="${s.name}" data-qty="${s.currentQty}">${s.name} (Остаток: ${s.currentQty} ${s.unit})</option>`;
       });
 
-      // Отрисовываем историю
       const logList = document.getElementById('stockLogList');
       logList.innerHTML = '';
       if (STATE.stockLog.length === 0) logList.innerHTML = '<div style="color:var(--subtext);font-size:13px;">История пуста</div>';
       
       STATE.stockLog.forEach(log => {
-        // Парсим дату для красоты, если нужно, или выводим как есть
-        const isAdd = log.type.includes('Приход');
-        const c = isAdd ? 'log-add' : 'log-rem';
+        const isAdd = log.type.includes('Приход') || log.type.includes('Новая');
         const sign = isAdd ? '+' : '-';
-        
         logList.innerHTML += `
-          <div class="log-item ${c}">
+          <div class="log-item ${isAdd ? 'log-add' : 'log-rem'}">
             <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
               <b>${log.item}</b> <span style="font-weight:bold; color:${isAdd ? 'var(--green)' : 'var(--red)'}">${sign}${log.qty}</span>
             </div>
             <div style="color:var(--subtext);">👤 ${log.user} • ${log.type}</div>
             <div style="font-style:italic; margin-top:2px;">💬 ${log.reason}</div>
-            <div style="font-size:11px; color:var(--subtext); margin-top:4px;">${new Date(log.date).toLocaleString('ru-RU')}</div>
           </div>
         `;
       });
@@ -220,22 +244,56 @@
       stockMode = mode;
       document.getElementById('stockAddBtn').classList.toggle('selected', mode === 'add');
       document.getElementById('stockRemBtn').classList.toggle('selected', mode === 'remove');
+      
+      const newStockWrapper = document.getElementById('newStockWrapper');
+      if (mode === 'add') {
+        newStockWrapper.style.display = 'block';
+      } else {
+        newStockWrapper.style.display = 'none';
+        document.getElementById('isNewStock').checked = false;
+        toggleNewStockFields();
+      }
+    }
+
+    function toggleNewStockFields() {
+      const isNew = document.getElementById('isNewStock').checked;
+      document.getElementById('existStockGroup').style.display = isNew ? 'none' : 'block';
+      document.getElementById('newStockFields').style.display = isNew ? 'block' : 'none';
     }
 
     function submitStockAction() {
-      const item = document.getElementById('stockItem').value;
-      const qty = document.getElementById('stockQty').value;
+      const isNew = document.getElementById('isNewStock').checked && stockMode === 'add';
+      const qty = Number(document.getElementById('stockQty').value);
       const reason = document.getElementById('stockReason').value.trim();
 
-      if (!item || !qty || !reason) return tg.showAlert("Заполните все поля, включая причину!");
-      
-      tg.sendData(JSON.stringify({
-        type: 'stock_action',
-        actionType: stockMode,
-        item: item,
-        qty: qty,
-        reason: reason
-      }));
+      if (qty <= 0 || !reason) return tg.showAlert("Введите корректное количество и укажите причину!");
+
+      if (isNew) {
+        const name = document.getElementById('newStockName').value.trim();
+        const unit = document.getElementById('newStockUnit').value;
+        const cost = Number(document.getElementById('newStockCost').value);
+        if (!name || cost <= 0) return tg.showAlert("Заполните название и цену закупки нового товара!");
+        
+        tg.sendData(JSON.stringify({
+          type: 'new_stock_item', name: name, unit: unit, cost: cost, qty: qty, reason: reason
+        }));
+      } else {
+        const select = document.getElementById('stockItem');
+        const item = select.value;
+        if (!item) return tg.showAlert("Выберите ингредиент из списка!");
+
+        // ЗАЩИТА ОТ ДУРАКА ПРИ СПИСАНИИ
+        if (stockMode === 'remove') {
+          const maxQty = Number(select.options[select.selectedIndex].getAttribute('data-qty'));
+          if (qty > maxQty) {
+            return tg.showAlert(`❌ Нельзя списать больше, чем есть на остатке!\nДоступно: ${maxQty}`);
+          }
+        }
+
+        tg.sendData(JSON.stringify({
+          type: 'stock_action', actionType: stockMode, item: item, qty: qty, reason: reason
+        }));
+      }
     }
 
     /* === КАССА === */
@@ -248,45 +306,23 @@
           <div class="item-card ${count > 0 ? 'active' : ''}" onclick="changeCount('${item.name}', 1)">
             <div class="item-title">${item.name}</div>
             <div class="item-price">${item.price} ₴</div>
-            ${count > 0 ? `
-              <div class="counter" onclick="event.stopPropagation()">
-                <button class="btn-count" onclick="changeCount('${item.name}', -1)">-</button>
-                <span style="font-weight:600; font-size:14px;">${count}</span>
-                <button class="btn-count" onclick="changeCount('${item.name}', 1)">+</button>
-              </div>
-            ` : ''}
+            ${count > 0 ? `<div class="counter" onclick="event.stopPropagation()"><button class="btn-count" onclick="changeCount('${item.name}', -1)">-</button><span style="font-weight:600; font-size:14px;">${count}</span><button class="btn-count" onclick="changeCount('${item.name}', 1)">+</button></div>` : ''}
           </div>
         `;
       });
       updateCartTotal();
     }
-    function changeCount(name, delta) {
-      cart[name] = (cart[name] || 0) + delta;
-      if (cart[name] <= 0) delete cart[name];
-      renderPOS();
-    }
-    function setPayment(method) {
-      paymentMethod = method;
-      document.getElementById('payCash').classList.toggle('selected', method === 'Наличные');
-      document.getElementById('payCard').classList.toggle('selected', method === 'Карта');
-    }
+    function changeCount(name, delta) { cart[name] = (cart[name] || 0) + delta; if (cart[name] <= 0) delete cart[name]; renderPOS(); }
+    function setPayment(method) { paymentMethod = method; document.getElementById('payCash').classList.toggle('selected', method === 'Наличные'); document.getElementById('payCard').classList.toggle('selected', method === 'Карта'); }
     function updateCartTotal() {
       let total = 0;
-      for (let name in cart) {
-        const item = STATE.menu.find(m => m.name === name);
-        total += item.price * cart[name];
-      }
+      for (let name in cart) { const item = STATE.menu.find(m => m.name === name); total += item.price * cart[name]; }
       document.getElementById('totalSum').innerText = `${total} ₴`;
       document.getElementById('posBottom').style.display = total > 0 ? 'flex' : 'none';
     }
     function submitOrder() {
-      const order = [];
-      let total = 0;
-      for (let name in cart) {
-        const item = STATE.menu.find(m => m.name === name);
-        order.push({ name: name, count: cart[name], price: item.price });
-        total += item.price * cart[name];
-      }
+      const order = []; let total = 0;
+      for (let name in cart) { const item = STATE.menu.find(m => m.name === name); order.push({ name: name, count: cart[name], price: item.price }); total += item.price * cart[name]; }
       tg.sendData(JSON.stringify({ type: "order", items: order, payment: paymentMethod, total: total }));
     }
 
@@ -301,12 +337,11 @@
           if (stockItem) cost += stockItem.cost * r.qty;
         });
         const margin = item.price > 0 ? ((item.price - cost) / item.price * 100).toFixed(0) : 0;
-        const marginClass = margin >= 50 ? 'margin-good' : 'margin-bad';
         list.innerHTML += `
           <div class="admin-stat-card" onclick="showForm('${item.name}')">
             <div class="stat-header"><span>${item.name}</span> <span>${item.price} ₴</span></div>
             <div class="stat-row"><span>Себестоимость:</span> <span>${cost.toFixed(2)} ₴</span></div>
-            <div class="stat-row"><span>Наценка (Маржа):</span> <span class="${marginClass}">${margin}%</span></div>
+            <div class="stat-row"><span>Наценка (Маржа):</span> <span class="${margin >= 50 ? 'margin-good' : 'margin-bad'}">${margin}%</span></div>
           </div>
         `;
       });
@@ -315,90 +350,62 @@
     /* === РЕДАКТОР === */
     function showForm(itemName = null) {
       editingItemName = itemName; 
-      const container = document.getElementById('ingredientsList');
-      container.innerHTML = '';
-
+      document.getElementById('ingredientsList').innerHTML = '';
       if (itemName) {
         const item = STATE.menu.find(m => m.name === itemName);
         document.getElementById('formTitle').innerText = 'Редактирование: ' + item.name;
         document.getElementById('editName').value = item.name;
         document.getElementById('editPrice').value = item.price;
-        
         const itemRecipes = STATE.recipes.filter(r => r.product === item.name);
-        if (itemRecipes.length === 0) addIngredientRow();
-        else itemRecipes.forEach(r => addIngredientRow(r.ingredient, r.qty));
+        if (itemRecipes.length === 0) addIngredientRow(); else itemRecipes.forEach(r => addIngredientRow(r.ingredient, r.qty));
       } else {
         document.getElementById('formTitle').innerText = 'Новая позиция';
         document.getElementById('editName').value = '';
         document.getElementById('editPrice').value = '';
         addIngredientRow();
       }
-      calcLiveStats();
-      switchTab('form');
+      calcLiveStats(); switchTab('form');
     }
 
     function addIngredientRow(selectedName = '', qty = '') {
       const container = document.getElementById('ingredientsList');
-      const row = document.createElement('div');
-      row.className = 'ing-row';
+      const row = document.createElement('div'); row.className = 'ing-row';
       let options = '<option value="" disabled selected>Выберите...</option>';
-      STATE.stock.forEach(s => {
-        const isSelected = (s.name === selectedName) ? 'selected' : '';
-        options += `<option value="${s.name}" data-cost="${s.cost}" ${isSelected}>${s.name} (${s.unit})</option>`;
-      });
-      row.innerHTML = `
-        <select class="ing-select" onchange="calcLiveStats()">${options}</select>
-        <input type="number" class="ing-qty" placeholder="Кол-во" value="${qty}" oninput="calcLiveStats()">
-        <button class="btn-del" onclick="this.parentElement.remove(); calcLiveStats()">✕</button>
-      `;
+      STATE.stock.forEach(s => { options += `<option value="${s.name}" data-cost="${s.cost}" ${s.name === selectedName ? 'selected' : ''}>${s.name} (${s.unit})</option>`; });
+      row.innerHTML = `<select class="ing-select" onchange="calcLiveStats()">${options}</select><input type="number" step="0.001" class="ing-qty" placeholder="Расход" value="${qty}" oninput="calcLiveStats()"><button class="btn-del" onclick="this.parentElement.remove(); calcLiveStats()">✕</button>`;
       container.appendChild(row);
     }
 
     function calcLiveStats() {
-      const price = Number(document.getElementById('editPrice').value) || 0;
-      let cost = 0;
+      const price = Number(document.getElementById('editPrice').value) || 0; let cost = 0;
       document.querySelectorAll('.ing-row').forEach(row => {
-        const select = row.querySelector('.ing-select');
-        const qty = Number(row.querySelector('.ing-qty').value) || 0;
-        if (select && select.selectedIndex > 0) {
-          const unitCost = Number(select.options[select.selectedIndex].getAttribute('data-cost')) || 0;
-          cost += unitCost * qty;
-        }
+        const select = row.querySelector('.ing-select'), qty = Number(row.querySelector('.ing-qty').value) || 0;
+        if (select && select.selectedIndex > 0) cost += (Number(select.options[select.selectedIndex].getAttribute('data-cost')) || 0) * qty;
       });
       document.getElementById('liveCost').innerText = `${cost.toFixed(2)} ₴`;
       const margin = price > 0 ? ((price - cost) / price * 100).toFixed(0) : 0;
-      const marginSpan = document.getElementById('liveMargin');
-      marginSpan.innerText = `${margin}%`;
-      marginSpan.className = margin >= 50 ? 'margin-good' : 'margin-bad';
+      document.getElementById('liveMargin').innerText = `${margin}%`;
+      document.getElementById('liveMargin').className = margin >= 50 ? 'margin-good' : 'margin-bad';
     }
 
     function saveItem() {
-      const name = document.getElementById('editName').value.trim();
-      const price = Number(document.getElementById('editPrice').value);
+      const name = document.getElementById('editName').value.trim(), price = Number(document.getElementById('editPrice').value);
       if (!name || !price) return tg.showAlert("Заполните название и цену!");
-      const ingredients = [];
-      let hasError = false;
+      const ingredients = []; let hasError = false;
       document.querySelectorAll('.ing-row').forEach(row => {
-        const select = row.querySelector('.ing-select');
-        const qty = Number(row.querySelector('.ing-qty').value);
+        const select = row.querySelector('.ing-select'), qty = Number(row.querySelector('.ing-qty').value);
         if (select.value && qty > 0) ingredients.push({ name: select.value, qty: qty });
         else if (select.value || qty > 0) hasError = true;
       });
       if (hasError) return tg.showAlert("Проверьте граммовки.");
-      tg.sendData(JSON.stringify({
-        type: editingItemName ? "update_item" : "new_item",
-        originalName: editingItemName, name: name, price: price, ingredients: ingredients
-      }));
+      tg.sendData(JSON.stringify({ type: editingItemName ? "update_item" : "new_item", originalName: editingItemName, name: name, price: price, ingredients: ingredients }));
     }
 
     /* === ВКЛАДКИ === */
     function switchTab(tabId) {
-      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      
+      document.querySelectorAll('.view, .nav-item').forEach(el => el.classList.remove('active'));
       document.getElementById(`view-${tabId}`)?.classList.add('active');
       document.getElementById(`nav-${tabId}`)?.classList.add('active');
-      
       document.getElementById('posBottom').style.display = (tabId === 'pos' && Object.keys(cart).length > 0) ? 'flex' : 'none';
     }
 
